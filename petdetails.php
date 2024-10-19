@@ -10,130 +10,158 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="main-content">
-            <?php
-            error_reporting(E_ALL);
-            ini_set('display_errors', 1);
-            
-            // Database connection
-            $conn = new mysqli("localhost", "root", "akshay", "petadoption"); // Use your credentials
+    <?php
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
 
-            // Check connection
-            if ($conn->connect_error) {
-                die("Connection failed: " . $conn->connect_error);
-            }
+    // Database connection
+    $conn = new mysqli("localhost", "root", "akshay", "petadoption");
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
 
-            // Fetch pet ID from URL
-            $pet_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+    // Debug function
+    function debug_log($message) {
+        error_log(print_r($message, true));
+    }
 
-            // Use prepared statement to fetch pet details
-            if ($pet_id > 0) {
-                $stmt = $conn->prepare("SELECT * FROM pets WHERE id = ?");
-                $stmt->bind_param("i", $pet_id);
-                $stmt->execute();
-                $result = $stmt->get_result();
+    $pet_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-                // Display pet details
-                if ($result->num_rows > 0) {
-                    $row = $result->fetch_assoc();
-                    
-                    // Debugging: Check if breed is being retrieved correctly
-                    var_dump($row["breed"]);
-                    
-                    echo '<div class="petdetails">
-                            <a href="findapet.php" class="back-link">Back to search results</a>
-                            <h2>' . htmlspecialchars($row["name"]) . '</h2>
-                            <h5>' . (isset($row["breed"]) && !empty($row["breed"]) ? htmlspecialchars($row["breed"]) : 'Unknown breed') . 
-                            ' | <strong>' . htmlspecialchars($row["age"]) . '</strong> years old</h5>
-                        </div>
-                        <img class="img1" src="uploads/' . htmlspecialchars($row["image_path"]) . '" alt="' . htmlspecialchars($row["name"]) . '">';
-                    
-                    echo '<div class="description">
-                            <h3>Description</h3>
-                            <p>' . htmlspecialchars($row["description"]) . '</p>
-                          </div>';
-                    
-                    // Fetch feature-related data
-                    $good_with_kids = $row["good_with_kids"];
-                    $good_with_dogs = $row["good_with_dogs"];
-                    $good_with_cats = $row["good_with_cats"];
-                    $house_trained = $row["house_trained"];
-                    $microchipped = $row["microchipped"];
-                    $purebred = $row["purebred"];
-                    $has_special_needs = $row["has_special_needs"];
-                    $has_behavioural_issues = $row["has_behavioural_issues"];
-                } else {
-                    echo "<p>Pet not found.</p>";
-                }
-                $stmt->close();
-            } else {
-                echo "<p>Invalid pet ID.</p>";
-            }
+    if ($pet_id > 0) {
+        $stmt = $conn->prepare("SELECT * FROM pets WHERE id = ?");
+        $stmt->bind_param("i", $pet_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-            $conn->close();
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            debug_log("Image path from DB: " . $row["image_path"]);
             ?>
-        </div>
+            <div class="container">
+                <div class="main-content">
+                    <div class="petdetails">
+                        <a href="findapet.php" class="back-link">Back to search results</a>
+                        <h2><?php echo htmlspecialchars($row["name"]); ?></h2>
+                        <h5>
+                            <?php echo htmlspecialchars($row["breed"] ?: 'Unknown breed'); ?> | 
+                            <strong><?php echo htmlspecialchars($row["age"]); ?></strong> years old
+                        </h5>
+                    </div>
 
-        <div class="side-info">
-            <div class="animallocbox">
-                <h3>Animal Location</h3>
-                <p style="color: rgb(97, 97, 97);">I'm being cared for by:</p>
-                <p><?php echo isset($row["location"]) ? htmlspecialchars($row["location"]) : "N/A"; ?></p>
+                    <?php
+                    // Image carousel
+                    if (!empty($row["image_path"])) {
+                        $images = array_filter(array_map('trim', explode(',', $row["image_path"])));
+                        if (!empty($images)) {
+                            echo '<div class="carousel">';
+                            
+                            // Radio buttons for slides
+                            foreach ($images as $index => $image) {
+                                echo '<input type="radio" name="slides" id="slide-' . ($index + 1) . '"' . 
+                                     ($index === 0 ? ' checked' : '') . '>';
+                            }
+
+                            // Slides
+                            echo '<ul class="carousel__slides">';
+                            foreach ($images as $image) {
+                                $imagePath = basename($image); // Get filename only
+                                echo '<li class="carousel__slide">
+                                        <figure>
+                                            <div>
+                                                <img src="uploads/' . htmlspecialchars($imagePath) . '" 
+                                                     alt="' . htmlspecialchars($row["name"]) . '">
+                                            </div>
+                                            <figcaption>
+                                                ' . htmlspecialchars($row["description"]) . '
+                                            </figcaption>
+                                        </figure>
+                                    </li>';
+                            }
+                            echo '</ul>';
+
+                            // Thumbnails
+                            echo '<ul class="carousel__thumbnails">';
+                            foreach ($images as $index => $image) {
+                                $imagePath = basename($image);
+                                echo '<li>
+                                        <label for="slide-' . ($index + 1) . '">
+                                            <img src="uploads/' . htmlspecialchars($imagePath) . '" 
+                                                 alt="Thumbnail ' . ($index + 1) . '">
+                                        </label>
+                                    </li>';
+                            }
+                            echo '</ul>';
+                            echo '</div>';
+                        }
+                    }
+                    ?>
+
+                    <div class="description">
+                        <h3>Description</h3>
+                        <p><?php echo htmlspecialchars($row["description"]); ?></p>
+                    </div>
+                </div>
+
+                <div class="side-info">
+                    <div class="animallocbox">
+                        <h3>Animal Location</h3>
+                        <p style="color: rgb(97, 97, 97);">I'm being cared for by:</p>
+                        <p><?php echo htmlspecialchars($row["location"] ?? "N/A"); ?></p>
+                    </div>
+                    <div class="adopt">
+                        <p>Thinking about adoption?</p>
+                        <p>Submit your adoption application by clicking the button below.</p>
+                        <a href="list-a-pet.html">
+                            <button class="submit">Submit</button>
+                        </a>
+                    </div>
+                </div>
             </div>
-            <div class="adopt">
-                <p>Thinking about adoption?</p>
-                <p>Submit your adoption application by clicking the button below.</p>
-                <a href="list-a-pet.html">
-                    <button class="submit">Submit</button>
-                </a>
+
+            <div class="extra-details">
+                <div class="details-box">
+                    <h3>Additional Details</h3>
+                    <ul>
+                        <li><strong>Sex:</strong> <?php echo htmlspecialchars($row["sex"] ?? "N/A"); ?></li>
+                        <li><strong>Size:</strong> <?php echo htmlspecialchars($row["size"] ?? "N/A"); ?></li>
+                        <li><strong>Vaccinated:</strong> <?php echo ($row["vaccinated"] ?? false) ? 'Yes' : 'No'; ?></li>
+                        <li><strong>Neutered:</strong> <?php echo ($row["neutered"] ?? false) ? 'Yes' : 'No'; ?></li>
+                    </ul>
+                </div>
+
+                <div class="details-box">
+                    <h3>Features</h3>
+                    <ul>
+                        <?php
+                        $features = [
+                            'good_with_kids' => 'Great with kids',
+                            'good_with_dogs' => 'Friendly with other dogs',
+                            'good_with_cats' => 'Friendly with cats',
+                            'house_trained' => 'House-trained',
+                            'microchipped' => 'Microchipped',
+                            'purebred' => 'Purebred',
+                            'has_special_needs' => 'Has special needs',
+                            'has_behavioural_issues' => 'Has behavioral issues'
+                        ];
+
+                        foreach ($features as $key => $label) {
+                            if (isset($row[$key]) && $row[$key] === 'yes') {
+                                echo '<li>' . htmlspecialchars($label) . '</li>';
+                            }
+                        }
+                        ?>
+                    </ul>
+                </div>
             </div>
-        </div>
-    </div>
-
-    <div class="extra-details">
-        <div class="details-box">
-            <h3>Additional Details</h3>
-            <ul>
-                <li><strong>Sex:</strong> <?php echo isset($row["sex"]) ? htmlspecialchars($row["sex"]) : "N/A"; ?></li>
-                <li><strong>Size:</strong> <?php echo isset($row["size"]) ? htmlspecialchars($row["size"]) : "N/A"; ?></li>
-                <li><strong>Vaccinated:</strong> <?php echo isset($row["vaccinated"]) && $row["vaccinated"] ? 'Yes' : 'No'; ?></li>
-                <li><strong>Neutered:</strong> <?php echo isset($row["neutered"]) && $row["neutered"] ? 'Yes' : 'No'; ?></li>
-            </ul>
-        </div>
-
-        <div class="details-box">
-            <h3>Features</h3>
-            <ul>
-                <?php
-                // Check each feature and display it if it's "yes"
-                if (isset($good_with_kids) && $good_with_kids === 'yes') {
-                    echo '<li>Great with kids</li>';
-                }
-                if (isset($good_with_dogs) && $good_with_dogs === 'yes') {
-                    echo '<li>Friendly with other dogs</li>';
-                }
-                if (isset($good_with_cats) && $good_with_cats === 'yes') {
-                    echo '<li>Friendly with cats</li>';
-                }
-                if (isset($house_trained) && $house_trained === 'yes') {
-                    echo '<li>House-trained</li>';
-                }
-                if (isset($microchipped) && $microchipped === 'yes') {
-                    echo '<li>Microchipped</li>';
-                }
-                if (isset($purebred) && $purebred === 'yes') {
-                    echo '<li>Purebred</li>';
-                }
-                if (isset($has_special_needs) && $has_special_needs === 'yes') {
-                    echo '<li>Has special needs</li>';
-                }
-                if (isset($has_behavioural_issues) && $has_behavioural_issues === 'yes') {
-                    echo '<li>Has behavioral issues</li>';
-                }
-                ?>
-            </ul>
-        </div>
-    </div>
+            <?php
+        } else {
+            echo "<p>Pet not found.</p>";
+        }
+        $stmt->close();
+    } else {
+        echo "<p>Invalid pet ID.</p>";
+    }
+    $conn->close();
+    ?>
 </body>
 </html>
