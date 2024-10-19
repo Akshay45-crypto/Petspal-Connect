@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>List a Pet - Petspal Connect</title>
+    <link rel="stylesheet" href="list-a-pet.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="intro">
+        <h1>List Your Pet for Adoption</h1>
+        <p>
+            In this section, you will be providing information about your pet. Please take the time to complete this section as fully as possible. This information forms the basis for your pet's listing, and you want to be sure you attract the best adopters!
+        </p>
+        <p>
+            Please choose great photos, and upload any useful documents. Please be honest about your pet. PetRehomer is here to help people responsibly rehome their pets, and we encourage rehomers to be truthful when describing their pets.
+        </p>
+    </div>
+
+    <!-- Photo Upload Section -->
+    <div class="photo-container">
+        <h2>Photos</h2>
+        <p>You can add up to 4 photos (.jpg, .png, .jpeg). For the best results, please upload landscape or square images. This is a bonded pair listing, so please make sure to add photos of both animals.</p>
+
+        <form action="submit_pet.php" method="post" enctype="multipart/form-data">
+            <div class="upload-container">
+                <input type="file" id="photo1" name="pet-photo1" accept=".jpg, .png, .jpeg">
+                <label for="photo1" class="upload-label">Upload Photo 1</label>
+
+                <input type="file" id="photo2" name="pet-photo2" accept=".jpg, .png, .jpeg">
+                <label for="photo2" class="upload-label">Upload Photo 2</label>
+
+                <input type="file" id="photo3" name="pet-photo3" accept=".jpg, .png, .jpeg">
+                <label for="photo3" class="upload-label">Upload Photo 3</label>
+
+                <input type="file" id="photo4" name="pet-photo4" accept=".jpg, .png, .jpeg">
+                <label for="photo4" class="upload-label">Upload Photo 4</label>
+            </div>
+
+            <div class="characteristics-container">
+                <h2>Characteristics</h2>
+                
+                <label for="pet-name">Pet's Name</label>
+                <input type="text" id="pet-name" name="pet-name" placeholder="Enter your pet's name" required>
+            
+                <label for="pet-age">Age (years)</label>
+                <input type="number" id="pet-age" name="pet-age" min="0" value="0" required>
+            
+                <label for="pet-size">Size</label>
+                <select id="pet-size" name="pet-size" required>
+                    <option value="" disabled selected>Select size</option>
+                    <option value="small">Small</option>
+                    <option value="medium">Medium</option>
+                    <option value="large">Large</option>
+                </select>
+            
+                <label for="pet-sex">Sex</label>
+                <select id="pet-sex" name="pet-sex" required>
+                    <option value="" disabled selected>Select sex</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                </select>
+
+                <!-- Updated breed field to text input -->
+                <label for="breed">Pet's Breed</label>
+                <input type="text" id="breed" name="breed" placeholder="Enter your pet's breed" required>
+            
+                <label for="pet-colour">Colours</label>
+                <select id="pet-colour" name="pet-colour" required>
+                    <option value="" disabled selected>Select color</option>
+                    <option value="black">Black</option>
+                    <option value="blue">Blue</option>
+                    <option value="brown">Brown/Chocolate</option>
+                    <option value="cream">Cream/Fawn/Yellow</option>
+                    <option value="gold">Gold/Apricot</option>
+                    <option value="mixed">Mixed Colour</option>
+                    <option value="other">Other</option>
+                    <option value="red">Red/Ginger</option>
+                    <option value="silver">Silver/Grey</option>
+                    <option value="white">White</option>
+                </select>
+            </div>
+
+            <div class="description-container">
+                <h2>Pet Description</h2>
+                <p>Provide a detailed description of your pet, including any unique qualities, temperament, or behavior patterns.</p>
+                <textarea id="description" name="pet-description" rows="5" cols="50" placeholder="Describe your pet..." required></textarea>
+            </div>
+
+            <div class="key-facts-container">
+                <h2>Key Facts</h2>
+
+                <div class="key-fact">
+                    <label>Neutered</label>
+                    <label><input type="radio" name="neutered" value="yes" required> Yes</label>
+                    <label><input type="radio" name="neutered" value="no"> No</label>
+                    <label><input type="radio" name="neutered" value="unknown"> Unknown</label>
+                </div>
+                
+                <div class="key-fact">
+                    <label>Shots up to date</label>
+                    <label><input type="radio" name="shots-up-to-date" value="yes" required> Yes</label>
+                    <label><input type="radio" name="shots-up-to-date" value="no"> No</label>
+                    <label><input type="radio" name="shots-up-to-date" value="unknown"> Unknown</label>
+                </div>
+
+                <div class="key-fact">
+                    <label>Microchipped</label>
+                    <label><input type="radio" name="microchipped" value="yes" required> Yes</label>
+                    <label><input type="radio" name="microchipped" value="no"> No</label>
+                    <label><input type="radio" name="microchipped" value="unknown"> Unknown</label>
+                </div>
+
+                <div class="key-fact">
+                    <label>House-trained</label>
+                    <label><input type="radio" name="house-trained" value="yes" required> Yes</label>
+                    <label><input type="radio" name="house-trained" value="no"> No</label>
+                    <label><input type="radio" name="house-trained" value="unknown"> Unknown</label>
+                </div>
+
+                <div class="key-fact">
+                    <label>Good with Dogs</label>
+                    <label><input type="radio" name="good-with-dogs" value="yes" required> Yes</label>
+                    <label><input type="radio" name="good-with-dogs" value="no"> No</label>
+                    <label><input type="radio" name="good-with-dogs" value="unknown"> Unknown</label>
+                </div>
+
+                <div class="key-fact">
+                    <label>Good with Cats</label>
+                    <label><input type="radio" name="good-with-cats" value="yes" required> Yes</label>
+                    <label><input type="radio" name="good-with-cats" value="no"> No</label>
+                    <label><input type="radio" name="good-with-cats" value="unknown"> Unknown</label>
+                </div>
+
+                <div class="key-fact">
+                    <label>Good with Kids</label>
+                    <label><input type="radio" name="good-with-kids" value="yes" required> Yes</label>
+                    <label><input type="radio" name="good-with-kids" value="no"> No</label>
+                    <label><input type="radio" name="good-with-kids" value="unknown"> Unknown</label>
+                </div>
+
+                <div class="key-fact">
+                    <label>Purebred</label>
+                    <label><input type="radio" name="purebred" value="yes" required> Yes</label>
+                    <label><input type="radio" name="purebred" value="no"> No</label>
+                    <label><input type="radio" name="purebred" value="unknown"> Unknown</label>
+                </div>
+
+                <div class="key-fact">
+                    <label>Has Special Needs</label>
+                    <label><input type="radio" name="has-special-needs" value="yes" required> Yes</label>
+                    <label><input type="radio" name="has-special-needs" value="no"> No</label>
+                    <label><input type="radio" name="has-special-needs" value="unknown"> Unknown</label>
+                </div>
+
+                <div class="key-fact">
+                    <label>Has Behavioural Issues</label>
+                    <label><input type="radio" name="has-behavioural-issues" value="yes" required> Yes</label>
+                    <label><input type="radio" name="has-behavioural-issues" value="no"> No</label>
+                    <label><input type="radio" name="has-behavioural-issues" value="unknown"> Unknown</label>
+                </div>
+            </div>
+
+            <div class="buttoncontainer">
+                <input type="submit" value="Submit" class="submit-button">
+            </div>
+        </form>
+    </div>
+</body>
+</html>
