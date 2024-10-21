@@ -1,6 +1,15 @@
 <?php
+session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+
+// Debug output
+echo "POST Data:<br>";
+var_dump($_POST);
+echo "<br><br>SESSION Data:<br>";
+var_dump($_SESSION);
+echo "<br><br>FILES Data:<br>";
+var_dump($_FILES);
 
 // Database connection
 $servername = "localhost";
@@ -14,100 +23,88 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Debugging: Print POST data
-print_r($_POST);
-$breed = $_POST['pet-breed'] ?? '';
-echo "Breed submitted: " . $breed;  // Debug statement
-
-
-// Prepare statement
-$stmt = $conn->prepare("INSERT INTO pets (name, breed, age, sex, size, vaccinated, neutered, location, description, features, image_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-
-if ($stmt === false) {
-    die("Failed to prepare statement: " . $conn->error);
+// Check if form was submitted
+if ($_SERVER["REQUEST_METHOD"] != "POST") {
+    die("Form not submitted properly");
 }
 
-// Get basic pet information
-$name = $_POST['pet-name'] ?? '';
-$breed = $_POST['pet-breed'] ?? ''; // User-entered breed
-$age = (int)$_POST['pet-age'];
-$sex = $_POST['pet-sex'] ?? '';
-$size = $_POST['pet-size'] ?? '';
-$vaccinated = ($_POST['shots-up-to-date'] === 'yes') ? 1 : 0;
-$neutered = ($_POST['neutered'] === 'yes') ? 1 : 0;
-$location = "";
-$description = $_POST['pet-description'] ?? '';
-
-// Process features
-$features = [];
-if (isset($_POST['microchipped']) && $_POST['microchipped'] === 'yes') {
-    $features[] = "Microchipped";
-}
-if (isset($_POST['house-trained']) && $_POST['house-trained'] === 'yes') {
-    $features[] = "House-trained";
-}
-if (isset($_POST['good-with-dogs']) && $_POST['good-with-dogs'] === 'yes') {
-    $features[] = "Friendly with other dogs";
-}
-if (isset($_POST['good-with-cats']) && $_POST['good-with-cats'] === 'yes') {
-    $features[] = "Friendly with cats";
-}
-if (isset($_POST['good-with-kids']) && $_POST['good-with-kids'] === 'yes') {
-    $features[] = "Great with kids";
-}
-if (isset($_POST['purebred']) && $_POST['purebred'] === 'yes') {
-    $features[] = "Purebred";
-}
-if (isset($_POST['has-special-needs']) && $_POST['has-special-needs'] === 'yes') {
-    $features[] = "Has special needs";
-}
-if (isset($_POST['has-behavioural-issues']) && $_POST['has-behavioural-issues'] === 'yes') {
-    $features[] = "Has behavioral issues";
+// Check session
+if (!isset($_SESSION['user_id'])) {
+    die("User not logged in");
 }
 
-// Convert features array to string
-$featuresString = implode(", ", $features);
+try {
+    // Get form data with validation
+    $name = isset($_POST['pet-name']) ? $_POST['pet-name'] : die("Pet name missing");
+    $breed = isset($_POST['breed']) ? $_POST['breed'] : die("Breed missing");
+    $age = isset($_POST['pet-age']) ? (int)$_POST['pet-age'] : die("Age missing");
+    $sex = isset($_POST['pet-sex']) ? $_POST['pet-sex'] : die("Sex missing");
+    $size = isset($_POST['pet-size']) ? $_POST['pet-size'] : die("Size missing");
+    
+    // Boolean conversions
+    $vaccinated = isset($_POST['vaccinated']) && $_POST['vaccinated'] === 'yes' ? 1 : 0;
+    $neutered = isset($_POST['neutered']) && $_POST['neutered'] === 'yes' ? 1 : 0;
+    $good_with_kids = isset($_POST['good-with-kids']) && $_POST['good-with-kids'] === 'yes' ? 1 : 0;
+    $good_with_dogs = isset($_POST['good-with-dogs']) && $_POST['good-with-dogs'] === 'yes' ? 1 : 0;
+    $good_with_cats = isset($_POST['good-with-cats']) && $_POST['good-with-cats'] === 'yes' ? 1 : 0;
+    $house_trained = isset($_POST['housetrained']) && $_POST['housetrained'] === 'yes' ? 1 : 0;
+    $microchipped = isset($_POST['microchipped']) && $_POST['microchipped'] === 'yes' ? 1 : 0;
+    $purebred = isset($_POST['purebred']) && $_POST['purebred'] === 'yes' ? 1 : 0;
+    $has_special_needs = isset($_POST['has-special-needs']) && $_POST['has-special-needs'] === 'yes' ? 1 : 0;
+    $has_behavioural_issues = isset($_POST['has-behavioural-issues']) && $_POST['has-behavioural-issues'] === 'yes' ? 1 : 0;
+    
+    $description = isset($_POST['pet-description']) ? $_POST['pet-description'] : '';
+    $user_id = $_SESSION['user_id'];
+    $location = $_SESSION['address'];
 
-// Handle image uploads
-$imagePaths = [];
-for ($i = 1; $i <= 4; $i++) {
-    if (isset($_FILES["pet-photo$i"]) && $_FILES["pet-photo$i"]["error"] == 0) {
-        $target_dir = "uploads/";
-        $target_file = $target_dir . basename($_FILES["pet-photo$i"]["name"]);
-        
-        if (move_uploaded_file($_FILES["pet-photo$i"]["tmp_name"], $target_file)) {
-            $imagePaths[] = $target_file;
-        } else {
-            echo "Error uploading photo $i.<br>";
+    // Handle image uploads
+    $imagePaths = [];
+    for ($i = 1; $i <= 4; $i++) {
+        if (isset($_FILES["pet-photo$i"]) && $_FILES["pet-photo$i"]["error"] === 0) {
+            $target_dir = "uploads/";
+            if (!file_exists($target_dir)) {
+                mkdir($target_dir, 0777, true);
+            }
+            $target_file = $target_dir . time() . '_' . basename($_FILES["pet-photo$i"]["name"]);
+            if (move_uploaded_file($_FILES["pet-photo$i"]["tmp_name"], $target_file)) {
+                $imagePaths[] = $target_file;
+            }
         }
     }
+    $imagePathsString = implode(", ", $imagePaths);
+
+    // Show SQL query for debugging
+    $query = "INSERT INTO pets (
+        name, breed, age, sex, size, vaccinated, neutered, location, description,
+        good_with_kids, good_with_dogs, good_with_cats, house_trained,
+        microchipped, purebred, has_special_needs, has_behavioural_issues,
+        image_path, user_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    
+    echo "<br><br>Query to execute:<br>" . $query;
+
+    $stmt = $conn->prepare($query);
+    if (!$stmt) {
+        die("Prepare failed: " . $conn->error);
+    }
+
+    $stmt->bind_param("ssiississiiiiiiiiis",
+        $name, $breed, $age, $sex, $size, $vaccinated, $neutered, $location,
+        $description, $good_with_kids, $good_with_dogs, $good_with_cats,
+        $house_trained, $microchipped, $purebred, $has_special_needs,
+        $has_behavioural_issues, $imagePathsString, $user_id
+    );
+
+    if (!$stmt->execute()) {
+        die("Execute failed: " . $stmt->error);
+    }
+
+    echo "<br><br>Insert successful!";
+    $stmt->close();
+    
+} catch (Exception $e) {
+    die("Error: " . $e->getMessage());
+} finally {
+    $conn->close();
 }
-
-// Join image paths for storage
-$imagePathsString = implode(", ", $imagePaths);
-
-// Bind parameters and execute - do this ONCE, after all variables are prepared
-$stmt->bind_param("ssiississss", 
-    $name, 
-    $breed,  // Now a free text entered by the user
-    $age, 
-    $sex, 
-    $size, 
-    $vaccinated, 
-    $neutered, 
-    $location, 
-    $description,
-    $featuresString,
-    $imagePathsString
-);
-
-if ($stmt->execute()) {
-    echo "New pet listing created successfully!";
-} else {
-    echo "Error: " . $stmt->error;
-}
-
-$stmt->close();
-$conn->close();
-
 ?>
