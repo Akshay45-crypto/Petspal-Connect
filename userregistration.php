@@ -1,5 +1,4 @@
 <?php
-
 $servername = "localhost"; 
 $username = "root";         
 $password = "akshay";             
@@ -17,11 +16,11 @@ function sanitizeInput($data) {
 
 // Handle registration
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['register'])) {
-    
     $email = sanitizeInput($_POST['email']);
     $firstname = sanitizeInput($_POST['firstname']);
     $lastname = sanitizeInput($_POST['lastname']);
-    $phone_number = sanitizeInput($_POST['phone']); // Update to match the database column
+    $phone_number = sanitizeInput($_POST['phone']);
+    $location = sanitizeInput($_POST['location']);
     
     $email = filter_var($email, FILTER_SANITIZE_EMAIL);
     $password = $_POST['password'];
@@ -48,9 +47,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['register'])) {
         if ($result->num_rows > 0) {
             $register_error = "Email is already registered.";
         } else {
-            $insert_query = "INSERT INTO users (email, firstname, lastname, phone_number, password) VALUES (?, ?, ?, ?, ?)";
+            $insert_query = "INSERT INTO users (email, firstname, lastname, phone_number, location, password) VALUES (?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($insert_query);
-            $stmt->bind_param("sssss", $email, $firstname, $lastname, $phone_number, $hashed_password);
+            $stmt->bind_param("ssssss", $email, $firstname, $lastname, $phone_number, $location, $hashed_password);
 
             if ($stmt->execute()) {
                 header("Location: success.php");  
@@ -63,8 +62,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['register'])) {
     }
 }
 
-// Handle login
+// Handle login - Updated with proper session handling
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
+    session_start();
+    
     $email = sanitizeInput($_POST['email']);
     $password = sanitizeInput($_POST['password']);
 
@@ -75,8 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
         exit;
     }
 
-    // Check if the email exists in the database
-    $login_query = "SELECT * FROM users WHERE email = ?";
+    $login_query = "SELECT id, email, firstname, location, password FROM users WHERE email = ?";
     $stmt = $conn->prepare($login_query);
     $stmt->bind_param("s", $email);
     $stmt->execute();
@@ -85,16 +85,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
         
-        // Verify the hashed password
         if (password_verify($password, $user['password'])) {
-            echo "Login successful for: " . $user['email'];
-            
-            // Start a session and redirect the user to the home page
-            session_start();
+            // Set all required session variables
+            $_SESSION['user_id'] = $user['id'];
             $_SESSION['user'] = $user['firstname'];
-           
+            $_SESSION['firstname'] = $user['firstname'];
+            $_SESSION['address'] = $user['location'];
             
-            header("Location: home.php"); // Redirect to home page
+            header("Location: home.php");
             exit();
         } else {
             $login_error = "Incorrect password.";
@@ -108,12 +106,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
 
 $conn->close();
 ?>
-
-
-
-
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -185,6 +177,10 @@ $conn->close();
                     <div class="input-group">
                         <label for="phone">Phone Number</label>
                         <input type="tel" id="phone" name="phone" placeholder="Phone number" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="location">Location</label>
+                        <input type="text" id="location" name="location" placeholder="Enter your location" required>
                     </div>
                     <div class="input-group">
                         <label for="password">Password</label>
