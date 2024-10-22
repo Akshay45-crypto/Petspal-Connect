@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
     <style>
-        /* Additional styles for the breed dropdown */
+        
         select#breed {
             width: 100%;
             padding: 8px;
@@ -18,7 +18,7 @@
             margin-bottom: 15px;
             font-size: 16px;
         }
-        /* Additional styles for yes/no dropdowns */
+        
         .yes-no-select {
             width: 100%;
             padding: 8px;
@@ -83,7 +83,7 @@
                     <option value="female">Female</option>
                 </select>
 
-                <!-- Breed selection -->
+               
                 <label for="breed">Pet's Breed</label>
                 <select id="breed" name="breed" required>
                     <option value="" disabled selected>Select breed</option>
@@ -150,7 +150,7 @@
                 </select>
             </div>
 
-            <!-- Yes/No selection for pet characteristics -->
+           
             <div class="pet-characteristics">
                 <h2>Pet Characteristics</h2>
                 
