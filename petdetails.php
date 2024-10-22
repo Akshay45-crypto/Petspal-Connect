@@ -10,32 +10,32 @@
     </style>
 </head>
 <body>
+
     <?php
     error_reporting(E_ALL);
     ini_set('display_errors', 1);
 
-    // Database connection
     $conn = new mysqli("localhost", "root", "akshay", "petadoption");
     if ($conn->connect_error) {
         die("Connection failed: " . $conn->connect_error);
     }
 
-    // Debug function
-    function debug_log($message) {
-        error_log(print_r($message, true));
+    function getLastAddressPart($address) {
+        $addressParts = explode(", ", $address);
+        return end($addressParts); 
     }
 
     $pet_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
     if ($pet_id > 0) {
-        $stmt = $conn->prepare("SELECT * FROM pets WHERE id = ?");
+        // Fetch the pet details along with the owner's name
+        $stmt = $conn->prepare("SELECT p.*, u.firstname FROM pets p JOIN users u ON p.user_id = u.user_id WHERE p.id = ?");
         $stmt->bind_param("i", $pet_id);
         $stmt->execute();
         $result = $stmt->get_result();
 
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
-            debug_log("Image path from DB: " . $row["image_path"]);
             ?>
             <div class="container">
                 <div class="main-content">
@@ -49,37 +49,27 @@
                     </div>
 
                     <?php
-                    // Image carousel
                     if (!empty($row["image_path"])) {
                         $images = array_filter(array_map('trim', explode(',', $row["image_path"])));
                         if (!empty($images)) {
                             echo '<div class="carousel">';
-                            
-                            // Radio buttons for slides
                             foreach ($images as $index => $image) {
                                 echo '<input type="radio" name="slides" id="slide-' . ($index + 1) . '"' . 
                                      ($index === 0 ? ' checked' : '') . '>';
                             }
-
-                            // Slides
                             echo '<ul class="carousel__slides">';
                             foreach ($images as $image) {
-                                $imagePath = basename($image); // Get filename only
+                                $imagePath = basename($image); 
                                 echo '<li class="carousel__slide">
                                         <figure>
                                             <div>
                                                 <img src="uploads/' . htmlspecialchars($imagePath) . '" 
                                                      alt="' . htmlspecialchars($row["name"]) . '">
                                             </div>
-                                            <figcaption>
-                                                ' . htmlspecialchars($row["description"]) . '
-                                            </figcaption>
                                         </figure>
                                     </li>';
                             }
                             echo '</ul>';
-
-                            // Thumbnails
                             echo '<ul class="carousel__thumbnails">';
                             foreach ($images as $index => $image) {
                                 $imagePath = basename($image);
@@ -106,12 +96,19 @@
                     <div class="animallocbox">
                         <h3>Animal Location</h3>
                         <p style="color: rgb(97, 97, 97);">I'm being cared for by:</p>
-                        <p><?php echo htmlspecialchars($row["location"] ?? "N/A"); ?></p>
+                        <?php
+                        // Display the user's name who uploaded the pet
+                        if (isset($row['firstname'])) {
+                            echo '<p>' . htmlspecialchars($row['firstname']) . '</p>'; 
+                        } else {
+                            echo '<p>N/A</p>'; 
+                        }
+                        ?>
                     </div>
                     <div class="adopt">
                         <p>Thinking about adoption?</p>
                         <p>Submit your adoption application by clicking the button below.</p>
-                        <a href="list-a-pet.html">
+                        <a href="list-a-pet.php">
                             <button class="submit">Submit</button>
                         </a>
                     </div>
@@ -153,6 +150,7 @@
                     </ul>
                 </div>
             </div>
+
             <?php
         } else {
             echo "<p>Pet not found.</p>";
@@ -161,6 +159,13 @@
     } else {
         echo "<p>Invalid pet ID.</p>";
     }
+
+    if (isset($_SESSION['address'])) {
+        $userAddress = htmlspecialchars($_SESSION['address']);
+        $location = getLastAddressPart($userAddress);
+        echo '<div class="animallocbox"><h3>Location</h3><p>' . $location . '</p></div>'; 
+    }
+
     $conn->close();
     ?>
 </body>
