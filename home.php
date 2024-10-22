@@ -1,7 +1,5 @@
 <?php
-session_start(); // Start the session
-
-// Check if the user is logged in
+session_start();
 $is_logged_in = isset($_SESSION['user']);
 ?>
 
@@ -15,24 +13,141 @@ $is_logged_in = isset($_SESSION['user']);
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+    <style>
+        .profile-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .profile-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 250px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            z-index: 1000;
+        }
+
+        .profile-dropdown:hover .profile-menu {
+            display: block;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .profile-avatar {
+            width: 40px;
+            height: 40px;
+            background: #8C1AF6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+        }
+
+        .profile-info h3 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .profile-info p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .profile-section {
+            margin-top: 1rem;
+        }
+
+        .profile-menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .profile-menu ul li a {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+            color: #333;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .message-badge {
+            background: #4CAF50;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .logout-btn {
+            display: block;
+            text-align: center;
+            padding: 0.5rem;
+            margin-top: 1rem;
+            color: #ff4444;
+            text-decoration: none;
+            border-top: 1px solid #eee;
+        }
+
+        /* Popup Styles */
+        /* Popup Styles */
+.popup {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+.popup-content {
+    background-color: blueviolet;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 40px; /* Increased padding for a larger popup */
+    border: 2px solid #888;
+    border-radius: 20px; /* Rounded borders */
+    width: 60%; /* Increased width for a larger popup */
+    text-align: center;
+    color: white; /* Make text color white for better visibility */
+    font-size: 1.5rem; /* Increased font size */
+}
+
+.close {
+    color: white;
+    float: right;
+    font-size: 30px; /* Increased close button font size */
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+    </style>
 </head>
 <body>
-    
-    <header>
- 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Petspal Connect - Home</title>
-    <link rel="stylesheet" href="home.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
-</head>
-<body>
-    
     <header>
         <div class="container">
             <div class="logo">Petspal<span>Connect</span></div>
@@ -40,46 +155,67 @@ $is_logged_in = isset($_SESSION['user']);
                 <ul class="nav-links">
                     <li><a href="home.php">Home</a></li>
                     <li class="dropdown">
-                        <a href="findapet.php" class="dropbtn">Adopt a Pet &#9662;</a>
-                        <div class="dropdown-content">
-                            <a href="readytoadopt.html">Are You Ready To Adopt A Pet?</a>
-                            <a href="testimonials.html">Testimonials from Adopters</a>
-                            <a href="findapet.php">Browse Pets</a>
-                        </div>
+                        <a href="findapet.php" class="dropbtn">Adopt a Pet </a>
                     </li>
-                    <li><a href="listpet.html">List a Pet</a></li>
-
-                    <!-- Show Login/Register only if user is not logged in -->
+                    <li><a href="#" onclick="checkLogin(event)">List a Pet</a></li>
                     <li><a href="#">About Us</a></li>
-                     <!-- Display the first name -->
-                        <li><a href="logout.php">Logout</a></li>
-                        <?php if (!$is_logged_in): ?>
-                        <li><a href="userregistration.php">Login/Register</a></li>
+                    <?php if ($is_logged_in): 
+                        $first_letter = strtoupper(substr($_SESSION['user'], 0, 1));
+                    ?>
+                        <li class="profile-dropdown">
+                            <a href="#" class="profile-trigger">Welcome, <?php echo htmlspecialchars($_SESSION['user']); ?></a>
+                            <div class="profile-menu">
+                                <div class="profile-header">
+                                    <div class="profile-avatar"><?php echo $first_letter; ?></div>
+                                    <div class="profile-info">
+                                        <h3><?php echo htmlspecialchars($_SESSION['user']); ?></h3>
+                                        <p><?php echo htmlspecialchars($_SESSION['email'] ?? ''); ?></p>
+                                    </div>
+                                </div>
+                                
+                                <div class="profile-section">
+                                    <ul>
+                                        <li>
+                                            <a href="messages.html">
+                                                My Messaging
+                                                <?php if (isset($_SESSION['unread_messages']) && $_SESSION['unread_messages'] > 0): ?>
+                                                    <span class="message-badge"><?php echo $_SESSION['unread_messages']; ?></span>
+                                                <?php endif; ?>
+                                            </a>
+                                        </li>
+                                        <li><a href="profile.php">My Profile</a></li>
+                                        <li><a href="favorites.php">Favourites</a></li>
+                                        <li><a href="preferences.php">Preferences</a></li>
+                                    </ul>
+                                </div>
+                                
+                                <a href="logout.php" class="logout-btn">Log out</a>
+                            </div>
+                        </li>
                     <?php else: ?>
-                        <li><a href="#">Welcome, <?php echo $_SESSION['user']; ?></a></li>
-                        
+                        <li><a href="userregistration.php">Login/Register</a></li>
                     <?php endif; ?>
                 </ul>
             </nav>
         </div>
     </header>
-    
-    <!-- Rest of the HTML structure -->
 
-</body>
-</html>
+    <!-- Popup HTML -->
+    <div id="login-popup" class="popup">
+        <div class="popup-content">
+            <span class="close" onclick="closePopup()">&times;</span>
+            <p>You haven't logged in. Please log in.</p>
+        </div>
+    </div>
 
-    </header>
-    
     <main>
         <div class="content">
             <h1>Welcome to Petspal <span>Connect</span></h1>
             <p>Your one-stop platform for adopting and caring for pets.</p>
             <a href="findapet.php" class="adopt-button">I want to adopt a pet</a>
-            <a href="listpet.html" class="rehome-button">I need to rehome a pet </a>
+            <a href="list-a-pet.php" class="rehome-button">I need to rehome a pet </a>
         </div>
 
-        <!-- Why Choose Us Section -->
         <section class="why-choose-us">
             <h2>Why Choose Petspal Connect?</h2>
             <p>Because we enable direct pet adoption, from one good home to another.</p>
@@ -114,12 +250,9 @@ $is_logged_in = isset($_SESSION['user']);
             </div>
         </section>
     </main>
-   
-
-
 
     <footer>
-        <div class="footer-container">
+       <div class="footer-container">
             <div class="footer-section about">
                 <h3>About Petspal Connect</h3>
                 <p>We’re reimagining how you can responsibly rehome and adopt pets...</p>
@@ -146,5 +279,28 @@ $is_logged_in = isset($_SESSION['user']);
             <p>&copy; 2024 Copyright - PetspalConnect</p>
         </div>
     </footer>
+
+    <script>
+        function checkLogin(event) {
+            event.preventDefault(); // Prevent the default link behavior
+            <?php if (!$is_logged_in): ?>
+                document.getElementById('login-popup').style.display = 'block'; // Show the popup
+            <?php else: ?>
+                window.location.href = 'list-a-pet.php'; // Redirect to the page if logged in
+            <?php endif; ?>
+        }
+
+        function closePopup() {
+            document.getElementById('login-popup').style.display = 'none'; // Hide the popup
+        }
+        
+        // Close the popup if the user clicks anywhere outside of it
+        window.onclick = function(event) {
+            const popup = document.getElementById('login-popup');
+            if (event.target === popup) {
+                closePopup();
+            }
+        }
+    </script>
 </body>
 </html>
