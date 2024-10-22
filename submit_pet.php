@@ -3,7 +3,7 @@ session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Debug output
+// Debugging info
 echo "POST Data:<br>";
 var_dump($_POST);
 echo "<br><br>SESSION Data:<br>";
@@ -11,7 +11,7 @@ var_dump($_SESSION);
 echo "<br><br>FILES Data:<br>";
 var_dump($_FILES);
 
-// Database connection
+
 $servername = "localhost";
 $username = "root";
 $password = "akshay";
@@ -23,25 +23,23 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Check if form was submitted
 if ($_SERVER["REQUEST_METHOD"] != "POST") {
     die("Form not submitted properly");
 }
 
-// Check session
 if (!isset($_SESSION['user_id'])) {
     die("User not logged in");
 }
 
 try {
-    // Get form data with validation
+    // Retrieve and validate form data
     $name = isset($_POST['pet-name']) ? $_POST['pet-name'] : die("Pet name missing");
     $breed = isset($_POST['breed']) ? $_POST['breed'] : die("Breed missing");
     $age = isset($_POST['pet-age']) ? (int)$_POST['pet-age'] : die("Age missing");
     $sex = isset($_POST['pet-sex']) ? $_POST['pet-sex'] : die("Sex missing");
     $size = isset($_POST['pet-size']) ? $_POST['pet-size'] : die("Size missing");
-    
-    // Boolean conversions
+
+    // Boolean values for yes/no selections
     $vaccinated = isset($_POST['vaccinated']) && $_POST['vaccinated'] === 'yes' ? 1 : 0;
     $neutered = isset($_POST['neutered']) && $_POST['neutered'] === 'yes' ? 1 : 0;
     $good_with_kids = isset($_POST['good-with-kids']) && $_POST['good-with-kids'] === 'yes' ? 1 : 0;
@@ -52,10 +50,11 @@ try {
     $purebred = isset($_POST['purebred']) && $_POST['purebred'] === 'yes' ? 1 : 0;
     $has_special_needs = isset($_POST['has-special-needs']) && $_POST['has-special-needs'] === 'yes' ? 1 : 0;
     $has_behavioural_issues = isset($_POST['has-behavioural-issues']) && $_POST['has-behavioural-issues'] === 'yes' ? 1 : 0;
-    
+
+    // Description and user ID from session
     $description = isset($_POST['pet-description']) ? $_POST['pet-description'] : '';
     $user_id = $_SESSION['user_id'];
-    $location = $_SESSION['address'];
+    $location = $_SESSION['address']; // Use 'address' from session since it maps to 'location' in the form
 
     // Handle image uploads
     $imagePaths = [];
@@ -73,7 +72,7 @@ try {
     }
     $imagePathsString = implode(", ", $imagePaths);
 
-    // Show SQL query for debugging
+    // Prepare SQL query
     $query = "INSERT INTO pets (
         name, breed, age, sex, size, vaccinated, neutered, location, description,
         good_with_kids, good_with_dogs, good_with_cats, house_trained,
@@ -88,6 +87,7 @@ try {
         die("Prepare failed: " . $conn->error);
     }
 
+    // Bind parameters
     $stmt->bind_param("ssiississiiiiiiiiis",
         $name, $breed, $age, $sex, $size, $vaccinated, $neutered, $location,
         $description, $good_with_kids, $good_with_dogs, $good_with_cats,
@@ -95,13 +95,14 @@ try {
         $has_behavioural_issues, $imagePathsString, $user_id
     );
 
+    // Execute query
     if (!$stmt->execute()) {
         die("Execute failed: " . $stmt->error);
     }
 
     echo "<br><br>Insert successful!";
     $stmt->close();
-    
+
 } catch (Exception $e) {
     die("Error: " . $e->getMessage());
 } finally {
