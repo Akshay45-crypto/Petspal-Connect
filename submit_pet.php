@@ -3,15 +3,6 @@ session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Debugging info
-echo "POST Data:<br>";
-var_dump($_POST);
-echo "<br><br>SESSION Data:<br>";
-var_dump($_SESSION);
-echo "<br><br>FILES Data:<br>";
-var_dump($_FILES);
-
-
 $servername = "localhost";
 $username = "root";
 $password = "akshay";
@@ -42,22 +33,23 @@ try {
     // Boolean values for yes/no selections
     $vaccinated = isset($_POST['vaccinated']) && $_POST['vaccinated'] === 'yes' ? 1 : 0;
     $neutered = isset($_POST['neutered']) && $_POST['neutered'] === 'yes' ? 1 : 0;
-    $good_with_kids = isset($_POST['good-with-kids']) && $_POST['good-with-kids'] === 'yes' ? 1 : 0;
-    $good_with_dogs = isset($_POST['good-with-dogs']) && $_POST['good-with-dogs'] === 'yes' ? 1 : 0;
-    $good_with_cats = isset($_POST['good-with-cats']) && $_POST['good-with-cats'] === 'yes' ? 1 : 0;
-    $house_trained = isset($_POST['housetrained']) && $_POST['housetrained'] === 'yes' ? 1 : 0;
-    $microchipped = isset($_POST['microchipped']) && $_POST['microchipped'] === 'yes' ? 1 : 0;
-    $purebred = isset($_POST['purebred']) && $_POST['purebred'] === 'yes' ? 1 : 0;
-    $has_special_needs = isset($_POST['has-special-needs']) && $_POST['has-special-needs'] === 'yes' ? 1 : 0;
-    $has_behavioural_issues = isset($_POST['has-behavioural-issues']) && $_POST['has-behavioural-issues'] === 'yes' ? 1 : 0;
 
+    $good_with_kids = isset($_POST['good-with-kids']) ? $_POST['good-with-kids'] : 'no';
+    $good_with_dogs = isset($_POST['good-with-dogs']) ? $_POST['good-with-dogs'] : 'no';
+    $good_with_cats = isset($_POST['good-with-cats']) ? $_POST['good-with-cats'] : 'no';
+    $house_trained = isset($_POST['housetrained']) && $_POST['housetrained'] === 'yes' ? 'yes' : 'no';
+    $microchipped = isset($_POST['microchipped']) && $_POST['microchipped'] === 'yes' ? 'yes' : 'no';
+    $purebred = isset($_POST['purebred']) && $_POST['purebred'] === 'yes' ? 'yes' : 'no';
+    $has_special_needs = isset($_POST['has-special-needs']) && $_POST['has-special-needs'] === 'yes' ? 'yes' : 'no';
+    $has_behavioural_issues = isset($_POST['has-behavioural-issues']) && $_POST['has-behavioural-issues'] === 'yes' ? 'yes' : 'no';
+    
     // Description and user ID from session
     $description = isset($_POST['pet-description']) ? $_POST['pet-description'] : '';
     $user_id = $_SESSION['user_id'];
     $location = $_SESSION['address']; // Use 'address' from session since it maps to 'location' in the form
 
     // Handle image uploads
-    $imagePaths = [];
+    $imagePaths = [];   
     for ($i = 1; $i <= 4; $i++) {
         if (isset($_FILES["pet-photo$i"]) && $_FILES["pet-photo$i"]["error"] === 0) {
             $target_dir = "uploads/";
@@ -79,21 +71,15 @@ try {
         microchipped, purebred, has_special_needs, has_behavioural_issues,
         image_path, user_id
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    
-    echo "<br><br>Query to execute:<br>" . $query;
 
     $stmt = $conn->prepare($query);
-    if (!$stmt) {
-        die("Prepare failed: " . $conn->error);
-    }
-
-    // Bind parameters
-    $stmt->bind_param("ssiississiiiiiiiiis",
-        $name, $breed, $age, $sex, $size, $vaccinated, $neutered, $location,
-        $description, $good_with_kids, $good_with_dogs, $good_with_cats,
-        $house_trained, $microchipped, $purebred, $has_special_needs,
-        $has_behavioural_issues, $imagePathsString, $user_id
-    );
+    $stmt->bind_param("sssssiissssssssssss", 
+        $name, $breed, $age, $sex, $size, 
+        $vaccinated, $neutered, $location, $description, 
+        $good_with_kids, $good_with_dogs, $good_with_cats, 
+        $house_trained, $microchipped, $purebred, 
+        $has_special_needs, $has_behavioural_issues, 
+        $imagePathsString, $user_id);
 
     // Execute query
     if (!$stmt->execute()) {
